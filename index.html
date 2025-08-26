@@ -633,7 +633,7 @@
         let puzzleGrid = [];
         let gameImages = [];
         let imagesLoaded = false;
-        let unlockedPictures = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // 新しい絵柄も追加
+        let unlockedPictures = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // ← 11 を追加
         let clearedStages = []; // クリアしたステージ情報
         
         // ✏️ 画像の詳細情報（提供者とコメント）
@@ -696,12 +696,18 @@
                 provider: 'みなしお',
                 message: '姉妹でピース！'
             }, // ← このカンマが必要
-            // 011.png の情報（新規追加例）
-            {
-                type: 'friend',
-                provider: 'けいくん',
-                message: 'くうこうでピカチュウと！'
-            }
+            // 011.png の情報
+        {
+                type: 'original',     // お友達提供
+                message: '超きょうぼうな猫・みみ'  // ← ここがコメントになります
+        },  // ← カンマ忘れずに
+            // 012.png の情報（新規追加）
+        {
+            type: 'friend',
+            provider: 'けいくん',
+            message: 'くうこうでピカチュウと！'
+            message: 'コメント内容'
+        }
         ];
 
         // 画面切り替え関数
@@ -819,18 +825,19 @@
         // 🆕 ローカル画像を読み込む（10個対応）
         function loadLocalImages() {
             const imagePaths = [
-                'images/001.png',
-                'images/002.png',
-                'images/003.png',
-                'images/004.png',
-                'images/005.png',
-                'images/006.png',
-                'images/007.png',
-                'images/008.png',
-                'images/009.png',
-                'images/010.png',
-                'images/011.png'  // 新しい画像を追加
-            ];
+            'images/001.png',
+            'images/002.png',
+            'images/003.png',
+            'images/004.png',
+            'images/005.png',
+            'images/006.png',
+            'images/007.png',
+            'images/008.png',
+            'images/009.png',
+            'images/010.png',
+            'images/011.png',
+            'images/012.png'  // ← これを追加
+        ];
 
             let loadedCount = 0;
             const totalImages = imagePaths.length;
