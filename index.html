@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ふわふわともだちスライドパズル</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+            padding: 10px;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        /* タイトル画面用の背景 */
+        body.title-background {
+            background-image: url('images/title-background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+       /* その他の画面用の背景 */
+        body.game-background {
+            background-image: url('images/game-background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* デスクトップ用タイトル背景（16:9対応） */
+        @media (min-width: 769px) {
+            body.title-background {
+                background-image: url('images/title-background-desktop.png');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }
+            
+            body.game-background {
+                background-image: url('images/game-background-desktop.png');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* タイトル画面では白いコンテナを非表示 */
+        body.title-background .game-container {
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 25px;
+            margin: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 120px;
+            touch-action: manipulation;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .difficulty-buttons .button {
+            display: block;
+            width: 100%;
+            margin: 10px auto;
+        }
+
+        .difficulty-buttons .button.easy { 
+            background: linear-gradient(45deg, #2ecc71, #27ae60); 
+        }
+        
+        .difficulty-buttons .button.normal { 
+            background: linear-gradient(45deg, #3498db, #2980b9); 
+        }
+
+        .difficulty-buttons .button.hard { 
+            background: linear-gradient(45deg, #f39c12, #e67e22); 
+        }
+
+        .difficulty-buttons .button.oni { 
+            background: linear-gradient(45deg, #e74c3c, #c0392b); 
+        }
+
+        .difficulty-buttons .button.choyaba { 
+            background: linear-gradient(45deg, #8e44ad, #7d3c98);
+            animation: rainbow 2s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background: linear-gradient(45deg, #e74c3c, #f39c12); }
+            25% { background: linear-gradient(45deg, #f39c12, #2ecc71); }
+            50% { background: linear-gradient(45deg, #2ecc71, #3498db); }
+            75% { background: linear-gradient(45deg, #3498db, #9b59b6); }
+            100% { background: linear-gradient(45deg, #9b59b6, #e74c3c); }
+        }
+
+        .puzzle-container {
+            margin: 20px auto;
+            display: inline-block;
+            border: 3px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f0f0f0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            gap: 1px;
+            background: #333;
+            padding: 1px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .puzzle-piece {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        .puzzle-piece:hover {
+            border-color: #ff6b6b;
+        }
+
+        .puzzle-piece.empty {
+            background: #ddd;
+            cursor: default;
+        }
+
+        .puzzle-piece.empty:hover {
+            border-color: transparent;
+        }
+
+        .moves-counter {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .picture-select {
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-x: scroll;
+            overflow-y: hidden;
+            padding: 10px 5px;
+            display: grid;
+            grid-template-rows: repeat(2, 85px);
+            grid-auto-flow: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            justify-content: start;
+        }
+
+        /* 右端にスクロール可能を示すグラデーション（条件付き表示） */
+        .picture-select.has-more::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 30px;
+            height: 100%;
+            background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .picture-select {
+            position: relative;
+            z-index: 1;
+        }
+        
+
+        .picture-option {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            min-width: 80px;
+            border: 3px solid transparent;
+            border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .picture-option:hover, .picture-option.selected {
+            border-color: #ff6b6b;
+            transform: scale(1.05);
+        }
+
+        /* クリア済み絵柄の★マーク */
+        .picture-option.cleared::before {
+            content: '⭐';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 16px;
+            z-index: 10;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .congratulations {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            align-items: center;
+        }
+        
+        .picture-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .new-unlock-message {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* 新しい紙吹雪アニメーション（中心から弾ける） */
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .confetti:nth-child(2n) { 
+            background: #3498db; 
+            animation: explode1 2s ease-out forwards;
+        }
+        .confetti:nth-child(3n) { 
+            background: #2ecc71; 
+            animation: explode2 2.2s ease-out forwards;
+        }
+        .confetti:nth-child(4n) { 
+            background: #f39c12; 
+            animation: explode3 1.8s ease-out forwards;
+        }
+        .confetti:nth-child(5n) { 
+            background: #9b59b6; 
+            animation: explode4 2.1s ease-out forwards;
+        }
+        .confetti:nth-child(6n) { 
+            background: #e74c3c; 
+            animation: explode5 1.9s ease-out forwards;
+        }
+        
+        @keyframes explode1 {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            15% { transform: translate(-30px, -80px) scale(1) rotate(180deg); opacity: 1; }
+            100% { transform: translate(-60px, 100px) scale(0.3) rotate(720deg); opacity: 0; }
+        }
+        
+        @keyframes explode2 {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            15% { transform: translate(40px, -60px) scale(1) rotate(-180deg); opacity: 1; }
+            100% { transform: translate(120px, 80px) scale(0.3) rotate(-720deg); opacity: 0; }
+        }
+        
+        @keyframes explode3 {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            15% { transform: translate(-70px, 30px) scale(1) rotate(270deg); opacity: 1; }
+            100% { transform: translate(-140px, 90px) scale(0.3) rotate(900deg); opacity: 0; }
+        }
+        
+        @keyframes explode4 {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            15% { transform: translate(50px, 40px) scale(1) rotate(-270deg); opacity: 1; }
+            100% { transform: translate(100px, 120px) scale(0.3) rotate(-900deg); opacity: 0; }
+        }
+        
+        @keyframes explode5 {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            15% { transform: translate(0px, -90px) scale(1) rotate(360deg); opacity: 1; }
+            100% { transform: translate(0px, -180px) scale(0.3) rotate(1080deg); opacity: 0; }
+        }
+        .back-button {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            margin-top: 15px;
+        }
+
+        .game-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+            font-weight: bold;
+        }
+        
+        .subtitle {
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+            font-weight: bold;
+        }
+
+        .loading-message {
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .title-content {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .start-game-button {
+            font-size: 20px;
+            padding: 20px 40px;
+            min-width: 200px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 10px;
+                max-width: 95vw;
+            }
+            
+            h1, .game-title {
+                font-size: 20px;
+            }
+            
+            h2 {
+                font-size: 18px;
+            }
+            
+            .button {
+                padding: 10px 15px;
+                font-size: 14px;
+                margin: 5px;
+            }
+            
+            .moves-counter {
+                font-size: 16px;
+            }
+            
+            .puzzle-container {
+                margin: 10px auto;
+                border: 2px solid #333;
+            }
+            
+            .puzzle-grid {
+                gap: 1px;
+                padding: 1px;
+            }
+
+            .picture-select {
+                max-height: 150px;
+                padding: 5px;
+                gap: 8px;
+                max-width: 100%;
+                justify-content: flex-start;
+            }
+            
+            .picture-option {
+                width: 85px;
+                height: 85px;
+                min-width: 85px;
+            }
+        }
+
+        /* スマホでの絵柄表示調整（2行×3列、右スクロール） */
+        @media (max-width: 480px) {
+            .picture-select {
+                width: calc(85px * 3 + 10px * 2 + 20px);
+                max-height: 190px;
+                margin: 20px auto;
+                grid-template-rows: repeat(2, 85px);
+                grid-template-columns: repeat(3, 85px);
+                grid-auto-flow: column;
+                overflow-x: scroll;
+                overflow-y: hidden;
+                justify-content: start;
+            }
+            
+            .picture-option {
+                width: 85px;
+                height: 85px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .game-container {
+                padding: 8px;
+                max-width: 98vw;
+            }
+            
+            .button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            
+            h1, .game-title {
+                font-size: 18px;
+            }
+            
+            .picture-select {
+                width: calc(75px * 3 + 6px * 2 + 8px);
+            }
+            
+            .picture-option {
+                width: 75px;
+                height: 75px;
+                min-width: 75px;
+            }
+        }
+        /* 完成イラスト表示用スタイル */
+        .completed-image {
+            width: 150px;
+            height: 150px;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            margin: 15px auto;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: block;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .thank-you-message {
+            
+        
+        /* スクロールバーのスタイリング */
+        .picture-select {
+            scrollbar-width: auto; /* Firefox用 */
+        }
+        
+        .picture-select::-webkit-scrollbar {
+            height: 14px;
+            display: block;
+        }
+        
+        .picture-select::-webkit-scrollbar-track {
+            background: #e0e0e0;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+        
+        .picture-select::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #ff6b6b, #3498db);
+            border-radius: 10px;
+            border: 1px solid #999;
+            min-width: 20px;
+        }
+        
+        .picture-select::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #e55555, #2980b9);
+        }
+        
+        .picture-select::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- タイトル画面 -->
+        <div id="title-screen" class="screen active">
+            <div class="loading-message" id="loading-message">画像を読み込み中...</div>
+            <div class="title-content">
+                <button class="button start-game-button" id="start-button" onclick="goToPictureSelect()" style="display: none;">ゲームスタート</button>
+            </div>
+        </div>
+
+        <!-- 絵柄選択画面 -->
+        <div id="picture-select-screen" class="screen">
+            <h2>絵柄を選ぼう！</h2>
+            <div class="picture-select" id="picture-options">
+                <div class="picture-option selected" onclick="selectPicture(0)" data-picture="0"></div>
+            </div>
+            <button class="button" onclick="goToDifficultySelect()">この絵柄で遊ぶ</button>
+            <button class="button back-button" onclick="goToTitle()">戻る</button>
+        </div>
+
+        <!-- 難易度選択画面 -->
+        <div id="difficulty-select-screen" class="screen">
+            <h2>難易度を選ぼう！</h2>
+            <div class="difficulty-buttons">
+                <button class="button easy" onclick="startGame(3)">かんたん (3×3)</button>
+                <button class="button normal" onclick="startGame(4)">ふつう (4×4)</button>
+                <button class="button hard" onclick="startGame(5)">むずい (5×5)</button>
+                <button class="button oni" onclick="startGame(9)">おに (9×9)</button>
+                <button class="button choyaba" onclick="startGame(11)">ちょーヤバ (11×11)</button>
+            </div>
+            <button class="button back-button" onclick="goToPictureSelect()">戻る</button>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="game-screen" class="screen">
+            <h2>パズルを解いてね！</h2>
+            <div class="moves-counter">動かした回数: <span id="moves">0</span></div>
+            <div class="puzzle-container">
+                <div id="puzzle-grid" class="puzzle-grid"></div>
+            </div>
+            <button class="button back-button" onclick="goToDifficultySelect()">難易度選択に戻る</button>
+        </div>
+
+        <!-- クリア画面 -->
+        <div id="clear-screen" class="screen">
+            <div class="congratulations" id="congratulations-container">
+                <h2>🎉 おめでとう！ 🎉</h2>
+                <p>パズルクリア！</p>
+                <div class="picture-title" id="picture-title"></div>
+                
+                <!-- 完成イラスト表示 -->
+                <div class="completed-image" id="completed-image"></div>
+                
+                <!-- 感謝メッセージ -->
+                <div class="thank-you-message" id="thank-you-message"></div>
+                
+                <p><span id="final-moves"></span>回で完成させました</p>
+            </div>
+            <!-- アンロックメッセージ削除（全絵柄が最初から利用可能） -->
+            <button class="button" onclick="goToPictureSelect()">次のパズルに挑戦</button>
+            <button class="button back-button" onclick="goToTitle()">タイトルに戻る</button>
+        </div>
+    </div>
+
+    <script>
+        // ゲーム状態
+        let currentPicture = 0;
+        let currentSize = 3;
+        let moves = 0;
+        let puzzleGrid = [];
+        let gameImages = [];
+        let imagesLoaded = false;
+        let unlockedPictures = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // 全ての絵柄を最初からアンロック
+        let clearedStages = []; // クリアしたステージ情報
+        
+        // ✏️ 画像の詳細情報（提供者とコメント）
+        // ここを編集して写真提供者情報とコメントを変更できます
+        const imageDetails = [
+            // 001.png の情報
+            {
+                type: 'original',  // あきらちゃん作成の場合は 'original'
+                message: '公園であそんだよ！'
+            },
+            // 002.png の情報
+            {
+                type: 'friend',     // お友達提供の場合は 'friend' に変更
+                provider: 'ゆあはな', // ← ここに提供者名を入力
+                message: 'ぶどう狩りに行ってきたよ！'  // ← ここがコメントになります
+            },
+            // 003.png の情報
+            {
+                type: 'friend',     // お友達提供
+                provider: 'Arumax', // ← ここに提供者名を入力
+                message: 'ウルトラマン参上！'  // ← ここがコメントになります
+            },
+            // 004.png の情報
+            {
+                type: 'original',     // あきら
+                message: 'あばれ祭、いってきたよ！'  // ← ここがコメントになります
+            },
+            // 005.png の情報
+            {
+                type: 'original',     // お友達提供
+                message: 'わいわい祭り、たのしかったね！'  // ← ここがコメントになります
+            },
+           // 006.png の情報
+            {
+                type: 'friend',     // お友達提供
+                provider: 'まほちゃん', // ← ここに提供者名を入力
+                message: 'やきマシュマロ、おいしーよ！'  // ← ここがコメントになります
+            },
+            // 007.png の情報
+            {
+                type: 'friend',     // お友達提供
+                provider: 'とうごくん', // ← ここに提供者名を入力
+                message: 'サッカーなかま'  // ← ここがコメントになります
+            },
+            // 008.png の情報
+            {
+                type: 'friend',     // お友達提供
+                provider: 'ゆりちゃん', // ← ここに提供者名を入力
+                message: 'たいせつな愛犬！'  // ← ここがコメントになります
+            },
+            // 009.png の情報
+            {
+                type: 'friend',     // お友達提供
+                provider: 'ここねちゃん', // ← ここに提供者名を入力
+                message: '姉妹でにっこり'  // ← ここがコメントになります
+            },
+            // 010.png の情報
+            {
+                type: 'friend',     // お友達提供
+                provider: 'みなしお', // ← ここに提供者名を入力
+                message: '姉妹でピース！'  // ← ここがコメントになります
+            }
+        ];
+
+        // 画面切り替え関数
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            
+            // 背景画像の切り替え
+            const body = document.body;
+            body.classList.remove('title-background', 'game-background');
+            
+            if (screenId === 'title-screen') {
+                body.classList.add('title-background');
+            } else {
+                body.classList.add('game-background');
+            }
+        }
+
+        function goToTitle() {
+            showScreen('title-screen');
+        }
+
+        function goToPictureSelect() {
+            if (!imagesLoaded) {
+                alert('画像の読み込みが完了していません。しばらくお待ちください。');
+                return;
+            }
+            updatePictureOptions();
+            showScreen('picture-select-screen');
+        }
+
+        function goToDifficultySelect() {
+            showScreen('difficulty-select-screen');
+        }
+
+        // 絵柄選択
+        function selectPicture(index) {
+            currentPicture = index;
+            document.querySelectorAll('.picture-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector(`[data-picture="${index}"]`).classList.add('selected');
+        }
+
+        function updatePictureOptions() {
+            const container = document.getElementById('picture-options');
+            container.innerHTML = '';
+            
+            // アンロックされた画像のみ表示
+            unlockedPictures.forEach((pictureIndex, displayIndex) => {
+                if (gameImages[pictureIndex]) {
+                    const option = document.createElement('div');
+                    option.className = 'picture-option' + (displayIndex === 0 ? ' selected' : '');
+                    option.style.backgroundImage = `url(${gameImages[pictureIndex]})`;
+                    option.setAttribute('data-picture', pictureIndex.toString());
+                    option.onclick = () => selectPicture(pictureIndex);
+                    
+                    // ホバー時の表示
+                    option.title = `画像 ${pictureIndex + 1}`;
+                    
+                    // クリア済みかチェックして★マーク追加
+                    const isCleared = clearedStages.some(stage => stage.startsWith(`${pictureIndex}-`));
+                    if (isCleared) {
+                        option.classList.add('cleared');
+                    }
+                    
+                    container.appendChild(option);
+                }
+            });
+            
+            // 現在選択中の絵柄を更新
+            if (unlockedPictures.includes(currentPicture)) {
+                selectPicture(currentPicture);
+            } else {
+                selectPicture(unlockedPictures[0]);
+            }
+            // スマホ用：右矢印の表示制御とコンテナ幅調整
+            const pictureContainer = document.getElementById('picture-options');
+            setTimeout(() => {
+                // 絵柄数に応じてコンテナ幅を動的調整（3列2行＋右スクロール）
+                const totalPictures = unlockedPictures.filter(index => gameImages[index]).length;
+                
+                if (window.innerWidth <= 480) {
+                    // 3列固定、必要に応じて右にスクロール
+                    const containerWidth = 85 * 3 + 10 * 2 + 20;
+                    pictureContainer.style.width = `${containerWidth}px`;
+                    pictureContainer.style.maxHeight = '190px';
+                    
+                    // 7枚以上の場合はスクロール可能
+                    if (totalPictures > 6) {
+                        pictureContainer.style.gridTemplateColumns = `repeat(${Math.ceil(totalPictures / 2)}, 85px)`;
+                    } else {
+                        pictureContainer.style.gridTemplateColumns = 'repeat(3, 85px)';
+                    }
+                }
+                
+                const hasMore = pictureContainer.scrollWidth > pictureContainer.clientWidth;
+                if (hasMore && totalPictures > 6) {
+                    pictureContainer.classList.add('has-more');
+                } else {
+                    pictureContainer.classList.remove('has-more');
+                }
+                
+                // スクロール時に矢印を非表示
+                pictureContainer.addEventListener('scroll', () => {
+                    if (pictureContainer.scrollLeft > 0) {
+                        pictureContainer.classList.remove('has-more');
+                    }
+                });
+            }, 100);
+        }
+
+        // 🆕 ローカル画像を読み込む（10個対応）
+        function loadLocalImages() {
+            const imagePaths = [
+                'images/001.png',
+                'images/002.png',
+                'images/003.png',
+                'images/004.png',
+                'images/005.png',
+                'images/006.png',
+                'images/007.png',
+                'images/008.png',
+                'images/009.png',
+                'images/010.png'
+            ];
+
+            let loadedCount = 0;
+            const totalImages = imagePaths.length;
+
+            imagePaths.forEach((path, index) => {
+                const img = new Image();
+                
+                img.onload = function() {
+                    // 画像を正方形にリサイズ
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 400;
+                    canvas.height = 400;
+                    
+                    const minSize = Math.min(img.width, img.height);
+                    const startX = (img.width - minSize) / 2;
+                    const startY = (img.height - minSize) / 2;
+                    
+                    ctx.drawImage(img, startX, startY, minSize, minSize, 0, 0, 400, 400);
+                    
+                    gameImages[index] = canvas.toDataURL();
+                    loadedCount++;
+                    
+                    console.log(`画像 ${index + 1}/${totalImages} 読み込み完了: ${path}`);
+                    
+                    if (loadedCount === totalImages) {
+                        onAllImagesLoaded();
+                    }
+                };
+                
+                img.onerror = function() {
+                    console.log(`画像読み込み失敗: ${path} - サンプル画像で代替`);
+                    // エラーの場合はサンプル画像を作成
+                    gameImages[index] = createSampleImage(index);
+                    loadedCount++;
+                    
+                    if (loadedCount === totalImages) {
+                        onAllImagesLoaded();
+                    }
+                };
+                
+                img.src = path;
+            });
+        }
+
+        function onAllImagesLoaded() {
+            imagesLoaded = true;
+            document.getElementById('loading-message').style.display = 'none';
+            document.getElementById('start-button').style.display = 'inline-block';
+            console.log('すべての画像の読み込みが完了しました！');
+            console.log('アンロック済み絵柄:', unlockedPictures);
+        }
+
+        // サンプル画像を作成（フォールバック用）
+        function createSampleImage(index) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 300;
+            canvas.height = 300;
+            
+            // 各画像ごとに異なる色のグラデーション
+            const colors = [
+                ['#ff6b6b', '#3498db', '#2ecc71'],  // 001
+                ['#9b59b6', '#e74c3c', '#f39c12'],  // 002
+                ['#1abc9c', '#34495e', '#e67e22'],  // 003
+                ['#f39c12', '#27ae60', '#2980b9'],  // 004
+                ['#8e44ad', '#16a085', '#f1c40f'],  // 005
+                ['#e74c3c', '#2ecc71', '#3498db'],  // 006
+                ['#95a5a6', '#e67e22', '#9b59b6'],  // 007
+                ['#2c3e50', '#f39c12', '#27ae60'],  // 008
+                ['#d35400', '#2980b9', '#8e44ad'],  // 009
+                ['#c0392b', '#16a085', '#f1c40f']   // 010
+            ];
+            
+            const colorSet = colors[index] || colors[0];
+            const gradient = ctx.createLinearGradient(0, 0, 300, 300);
+            gradient.addColorStop(0, colorSet[0]);
+            gradient.addColorStop(0.5, colorSet[1]);
+            gradient.addColorStop(1, colorSet[2]);
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 300, 300);
+            
+            // 図形を追加
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(80, 80, 30, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(220, 80, 40, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.arc(150, 220, 50, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // テキスト
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`画像${index + 1}`, 150, 150);
+            
+            return canvas.toDataURL();
+        }
+
+        // ゲーム開始
+        function startGame(size) {
+            currentSize = size;
+            moves = 0;
+            document.getElementById('moves').textContent = moves;
+            initializePuzzle();
+            showScreen('game-screen');
+        }
+
+        // パズル初期化
+        function initializePuzzle() {
+            const container = document.getElementById('puzzle-grid');
+            
+            // 画面サイズとパディングを考慮してパズルサイズを調整
+            const containerPadding = 60; // コンテナの余白
+            const screenWidth = window.innerWidth - containerPadding;
+            const screenHeight = window.innerHeight - 300; // UI要素分を除く
+            
+            let maxSize;
+            if (currentSize <= 4) {
+                maxSize = Math.min(screenWidth * 0.85, screenHeight * 0.7, 320);
+            } else if (currentSize <= 6) {
+                maxSize = Math.min(screenWidth * 0.90, screenHeight * 0.75, 360);
+            } else if (currentSize <= 9) {
+                maxSize = Math.min(screenWidth * 0.95, screenHeight * 0.8, 380);
+            } else {
+                // ちょーヤバは特に小さく
+                maxSize = Math.min(screenWidth * 0.98, screenHeight * 0.85, 400);
+            }
+            
+            const pieceSize = Math.floor(maxSize / currentSize);
+            
+            container.style.gridTemplateColumns = `repeat(${currentSize}, ${pieceSize}px)`;
+            container.innerHTML = '';
+            
+            // パズルピースの配列を作成
+            puzzleGrid = [];
+            for (let i = 0; i < currentSize * currentSize - 1; i++) {
+                puzzleGrid.push(i);
+            }
+            puzzleGrid.push(null); // 空のピース
+            
+            // シャッフル（大きなパズルほど多くシャッフル）
+            shufflePuzzle();
+            
+            // DOM要素を作成
+            renderPuzzle(pieceSize);
+        }
+
+        function shufflePuzzle() {
+            // 解ける状態を保証するシャッフル（難易度に応じて調整）
+            let shuffleCount;
+            if (currentSize <= 4) {
+                shuffleCount = 1000;
+            } else if (currentSize <= 6) {
+                shuffleCount = 2000;
+            } else if (currentSize <= 9) {
+                shuffleCount = 3000;
+            } else {
+                shuffleCount = 5000; // ちょーヤバは特別に多く
+            }
+            
+            for (let i = 0; i < shuffleCount; i++) {
+                const emptyIndex = puzzleGrid.indexOf(null);
+                const possibleMoves = getPossibleMoves(emptyIndex);
+                if (possibleMoves.length > 0) {
+                    const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                    [puzzleGrid[emptyIndex], puzzleGrid[randomMove]] = [puzzleGrid[randomMove], puzzleGrid[emptyIndex]];
+                }
+            }
+        }
+
+        function getPossibleMoves(emptyIndex) {
+            const moves = [];
+            const row = Math.floor(emptyIndex / currentSize);
+            const col = emptyIndex % currentSize;
+            
+            if (row > 0) moves.push(emptyIndex - currentSize); // 上
+            if (row < currentSize - 1) moves.push(emptyIndex + currentSize); // 下
+            if (col > 0) moves.push(emptyIndex - 1); // 左
+            if (col < currentSize - 1) moves.push(emptyIndex + 1); // 右
+            
+            return moves;
+        }
+
+        function renderPuzzle(pieceSize) {
+            const container = document.getElementById('puzzle-grid');
+            container.innerHTML = '';
+            
+            puzzleGrid.forEach((piece, index) => {
+                const pieceElement = document.createElement('div');
+                pieceElement.className = 'puzzle-piece';
+                pieceElement.style.width = `${pieceSize}px`;
+                pieceElement.style.height = `${pieceSize}px`;
+                
+                if (piece === null) {
+                    pieceElement.classList.add('empty');
+                } else {
+                    const row = Math.floor(piece / currentSize);
+                    const col = piece % currentSize;
+                    const bgX = -(col * pieceSize);
+                    const bgY = -(row * pieceSize);
+                    const totalSize = pieceSize * currentSize;
+                    
+                    pieceElement.style.backgroundImage = `url(${gameImages[currentPicture]})`;
+                    pieceElement.style.backgroundSize = `${totalSize}px ${totalSize}px`;
+                    pieceElement.style.backgroundPosition = `${bgX}px ${bgY}px`;
+                    
+                    pieceElement.onclick = () => movePiece(index);
+                    
+                    // タッチ操作対応
+                    pieceElement.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        movePiece(index);
+                    });
+                }
+                
+                container.appendChild(pieceElement);
+            });
+        }
+
+        function movePiece(clickedIndex) {
+            const emptyIndex = puzzleGrid.indexOf(null);
+            const possibleMoves = getPossibleMoves(emptyIndex);
+            
+            if (possibleMoves.includes(clickedIndex)) {
+                // ピースを移動
+                [puzzleGrid[emptyIndex], puzzleGrid[clickedIndex]] = [puzzleGrid[clickedIndex], puzzleGrid[emptyIndex]];
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                
+                // パズルサイズに応じて再計算（初期化と同じロジック）
+                const containerPadding = 60;
+                const screenWidth = window.innerWidth - containerPadding;
+                const screenHeight = window.innerHeight - 300;
+                
+                let maxSize;
+                if (currentSize <= 4) {
+                    maxSize = Math.min(screenWidth * 0.85, screenHeight * 0.7, 320);
+                } else if (currentSize <= 6) {
+                    maxSize = Math.min(screenWidth * 0.90, screenHeight * 0.75, 360);
+                } else if (currentSize <= 9) {
+                    maxSize = Math.min(screenWidth * 0.95, screenHeight * 0.8, 380);
+                } else {
+                    maxSize = Math.min(screenWidth * 0.98, screenHeight * 0.85, 400);
+                }
+                
+                const pieceSize = Math.floor(maxSize / currentSize);
+                renderPuzzle(pieceSize);
+                
+                // クリアチェック
+                if (checkWin()) {
+                    setTimeout(showClear, 500);
+                }
+            }
+        }
+
+        function checkWin() {
+            for (let i = 0; i < puzzleGrid.length - 1; i++) {
+                if (puzzleGrid[i] !== i) return false;
+            }
+            return puzzleGrid[puzzleGrid.length - 1] === null;
+        }
+
+        function showClear() {
+            document.getElementById('final-moves').textContent = moves;
+            // 完成イラストを表示
+             document.getElementById('completed-image').style.backgroundImage = `url(${gameImages[currentPicture]})`;
+            console.log('完成画像設定:', currentPicture, gameImages[currentPicture] ? '画像あり' : '画像なし');
+            console.log('completed-image要素:', document.getElementById('completed-image'));
+    console.log('currentPicture値:', currentPicture);
+    console.log('gameImages配列:', gameImages.length, '個の画像');
+    if (gameImages[currentPicture]) {
+        console.log('画像データの最初の部分:', gameImages[currentPicture].substring(0, 50));
+    }
+            
+            // 感謝メッセージと写真提供者を表示
+            const currentImageDetail = imageDetails[currentPicture];
+            if (currentImageDetail) {
+                document.getElementById('thank-you-message').textContent = currentImageDetail.message;
+                
+                // 写真提供者を表示（「誰々より」形式）
+                const titleElement = document.getElementById('picture-title');
+                if (currentImageDetail.type === 'friend') {
+                    titleElement.innerHTML = `${currentImageDetail.provider}<span style="font-size: 14px;">より</span>`;
+                } else {
+                    titleElement.innerHTML = `あきら<span style="font-size: 14px;">より</span>`;
+                }
+            } else {
+                document.getElementById('thank-you-message').textContent = '遊んでくれてありがとう！';
+                document.getElementById('picture-title').innerHTML = `あきら<span style="font-size: 14px;">より</span>`;
+            }
+                        
+            // ステージクリア情報を保存
+            const stageKey = `${currentPicture}-${currentSize}`;
+            if (!clearedStages.includes(stageKey)) {
+                clearedStages.push(stageKey);
+                saveGameData();
+            }
+            
+           // アンロックシステム無効化（全絵柄が最初から利用可能）
+            // checkAndUnlockNewPicture();
+            
+            // 紙吹雪アニメーション
+            createConfetti();
+            
+            showScreen('clear-screen');
+        }
+        
+        // 新しい絵柄のアンロック判定（現在は使用しない）
+        function checkAndUnlockNewPicture() {
+            const totalImages = imageDetails.length;
+            
+            // まだアンロックされていない絵柄があるかチェック
+            if (unlockedPictures.length < totalImages && Math.random() < 0.7) { // 70%の確率
+                const availableImages = [];
+                for (let i = 0; i < totalImages; i++) {
+                    if (!unlockedPictures.includes(i) && gameImages[i]) {
+                        availableImages.push(i);
+                    }
+                }
+                
+                if (availableImages.length > 0) {
+                    // ランダムに新しい絵柄をアンロック
+                    const newPictureIndex = availableImages[Math.floor(Math.random() * availableImages.length)];
+                    unlockedPictures.push(newPictureIndex);
+                    saveGameData();
+                    
+                    // アンロックメッセージを表示
+                    const unlockTitle = `画像 ${newPictureIndex + 1}`;
+                    document.getElementById('unlock-title').textContent = `「${unlockTitle}」がアンロックされました！`;
+                    document.getElementById('unlock-message').style.display = 'block';
+                } else {
+                    document.getElementById('unlock-message').style.display = 'none';
+                }
+            } else {
+                document.getElementById('unlock-message').style.display = 'none';
+            }
+        }
+        
+        // 紙吹雪アニメーション
+        function createConfetti() {
+            const container = document.getElementById('congratulations-container');
+            
+            // 既存の紙吹雪を削除
+            const existingConfetti = container.querySelectorAll('.confetti');
+            existingConfetti.forEach(confetti => confetti.remove());
+            
+            // 新しい紙吹雪を作成
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.animationDelay = Math.random() * 2 + 's';
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    container.appendChild(confetti);
+                    
+                    // 3秒後に削除
+                    setTimeout(() => {
+                        if (confetti.parentNode) {
+                            confetti.parentNode.removeChild(confetti);
+                        }
+                    }, 4000);
+                }, i * 50);
+            }
+        }
+        
+        // ゲームデータの保存
+        function saveGameData() {
+            const gameData = {
+                unlockedPictures: unlockedPictures,
+                clearedStages: clearedStages
+            };
+            localStorage.setItem('slidepuzzle_gamedata', JSON.stringify(gameData));
+        }
+        
+        // ゲームデータの読み込み
+        function loadGameData() {
+            try {
+                const savedData = localStorage.getItem('slidepuzzle_gamedata');
+                if (savedData) {
+                    const gameData = JSON.parse(savedData);
+                    // アンロック情報は使わず、クリア情報のみ読み込み
+                    clearedStages = gameData.clearedStages || [];
+                    console.log('セーブデータを読み込みました（クリア情報のみ）:', gameData);
+                }
+            } catch (error) {
+                console.log('セーブデータの読み込みに失敗しました');
+                clearedStages = [];
+            }
+        }
+
+        // ゲーム画面で「Ctrl + Shift + C」を押したときにクリア画面に直接ジャンプ
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'C' && document.getElementById('game-screen').classList.contains('active')) {
+                moves = Math.floor(Math.random() * 50) + 10; // ランダムな手数
+                showClear();
+            }
+        });
+
+        // 初期化
+        window.onload = function() {
+            console.log('ゲーム開始 - ローカル画像を読み込み中...');
+            
+            // 初期状態でタイトル背景を強制的に設定
+            const body = document.body;
+            body.className = ''; // 既存のクラスをクリア
+            body.classList.add('title-background');
+            console.log('タイトル背景を設定:', body.className);
+            console.log('bodyクラス一覧:', body.classList);
+            
+            loadGameData(); // セーブデータを読み込み
+            loadLocalImages();
+        }
+    </script>
+</body>
+</html>
