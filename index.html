@@ -520,12 +520,23 @@
         }
         
         .thank-you-message {
-            
-        
-        /* スクロールバーのスタイリング */
-        .picture-select {
-            scrollbar-width: auto; /* Firefox用 */
-        }
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* スクロールバーのスタイリング */
+.picture-select {
+    scrollbar-width: auto; /* Firefox用 */
+}
+    
+/* スクロールバーのスタイリング */
+.picture-select {
+    scrollbar-width: auto; /* Firefox用 */
+}
         
         .picture-select::-webkit-scrollbar {
             height: 14px;
@@ -633,7 +644,7 @@
         let puzzleGrid = [];
         let gameImages = [];
         let imagesLoaded = false;
-        let unlockedPictures = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // ← 11 を追加
+        let unlockedPictures = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // ← 12 を追加
         let clearedStages = []; // クリアしたステージ情報
         
         // ✏️ 画像の詳細情報（提供者とコメント）
@@ -701,14 +712,20 @@
                 type: 'original',     // お友達提供
                 message: '超きょうぼうな猫・みみ'  // ← ここがコメントになります
         },  // ← カンマ忘れずに
-            // 012.png の情報（新規追加）
+           // 012.png の情報
         {
             type: 'friend',
             provider: 'けいくん',
             message: 'くうこうでピカチュウと！'
-        }
-        ];
-
+        },  // ← カンマ忘れずに
+        // 013.png の情報
+{
+    type: 'friend',
+    provider: 'ななちゃん',
+    message: 'イェーイ☆'
+}
+];  // ← この閉じ括弧とセミコロンが必要
+        
         // 画面切り替え関数
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(screen => {
@@ -824,19 +841,20 @@
         // 🆕 ローカル画像を読み込む（10個対応）
         function loadLocalImages() {
             const imagePaths = [
-            'images/001.png',
-            'images/002.png',
-            'images/003.png',
-            'images/004.png',
-            'images/005.png',
-            'images/006.png',
-            'images/007.png',
-            'images/008.png',
-            'images/009.png',
-            'images/010.png',
-            'images/011.png',
-            'images/012.png'  // ← これを追加
-        ];
+    'images/001.png',
+    'images/002.png',
+    'images/003.png',
+    'images/004.png',
+    'images/005.png',
+    'images/006.png',
+    'images/007.png',
+    'images/008.png',
+    'images/009.png',
+    'images/010.png',
+    'images/011.png',
+    'images/012.png',
+    'images/013.png'  // ← 追加
+];
 
             let loadedCount = 0;
             const totalImages = imagePaths.length;
