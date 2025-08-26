@@ -573,11 +573,13 @@
     </style>
 </head>
 <body>
+    
+    <body>
     <audio id="bgm" autoplay loop>
-    <source src="sounds/bgm.mp3" type="audio/mpeg">
-    <source src="sounds/bgm.ogg" type="audio/ogg">
-    <!-- ブラウザが対応していない場合のメッセージ -->
-</audio>
+        <source src="sounds/bgm.mp3" type="audio/mpeg">
+        <source src="sounds/bgm.ogg" type="audio/ogg">
+    </audio>
+    <button class="button" onclick="toggleMute()" id="mute-btn" style="position: fixed; top: 10px; right: 10px; min-width: 50px; z-index: 100;">🔊</button>
     <div class="game-container">
         <!-- タイトル画面 -->
         <div id="title-screen" class="screen active">
@@ -665,19 +667,20 @@ function initBGM() {
 }
 
 function toggleMute() {
+    const muteBtn = document.getElementById('mute-btn');
     if (bgmAudio) {
         if (isMuted) {
             bgmAudio.play();
             isMuted = false;
+            muteBtn.textContent = '🔊';
         } else {
             bgmAudio.pause();
             isMuted = true;
+            muteBtn.textContent = '🔇';
         }
     }
 }
-
-        <button class="button" onclick="toggleMute()" id="mute-btn" style="position: fixed; top: 10px; right: 10px; min-width: 50px;">🔊</button>
-        
+               
         // ゲーム状態
         let currentPicture = 0;
         let currentSize = 3;
