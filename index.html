@@ -573,6 +573,11 @@
     </style>
 </head>
 <body>
+    <audio id="bgm" autoplay loop>
+    <source src="sounds/bgm.mp3" type="audio/mpeg">
+    <source src="sounds/bgm.ogg" type="audio/ogg">
+    <!-- ブラウザが対応していない場合のメッセージ -->
+</audio>
     <div class="game-container">
         <!-- タイトル画面 -->
         <div id="title-screen" class="screen active">
@@ -637,6 +642,42 @@
     </div>
 
     <script>
+        // BGM関連
+let bgmAudio = null;
+let isMuted = false;
+
+function initBGM() {
+    bgmAudio = document.getElementById('bgm');
+    if (bgmAudio) {
+        bgmAudio.volume = 0.3; // 音量30%に設定
+        // 最初の再生が失敗した場合のフォールバック
+        bgmAudio.play().catch(e => {
+            console.log('自動再生が制限されています。ユーザー操作後に再生します。');
+            // 最初のクリック時に再生開始
+            document.addEventListener('click', function startBGM() {
+                if (bgmAudio && !isMuted) {
+                    bgmAudio.play();
+                }
+                document.removeEventListener('click', startBGM);
+            });
+        });
+    }
+}
+
+function toggleMute() {
+    if (bgmAudio) {
+        if (isMuted) {
+            bgmAudio.play();
+            isMuted = false;
+        } else {
+            bgmAudio.pause();
+            isMuted = true;
+        }
+    }
+}
+
+        <button class="button" onclick="toggleMute()" id="mute-btn" style="position: fixed; top: 10px; right: 10px; min-width: 50px;">🔊</button>
+        
         // ゲーム状態
         let currentPicture = 0;
         let currentSize = 3;
@@ -1278,6 +1319,7 @@
             
             loadGameData(); // セーブデータを読み込み
             loadLocalImages();
+            initBGM(); // ← これを追加
         }
     </script>
 </body>
