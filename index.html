@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -688,7 +688,7 @@ function toggleMute() {
         let puzzleGrid = [];
         let gameImages = [];
         let imagesLoaded = false;
-        let unlockedPictures = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // ← 12 を追加
+        let unlockedPictures = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
         let clearedStages = []; // クリアしたステージ情報
         
         // ✏️ 画像の詳細情報（提供者とコメント）
@@ -763,12 +763,24 @@ function toggleMute() {
             message: 'くうこうでピカチュウと！'
         },  // ← カンマ忘れずに
         // 013.png の情報
-{
-    type: 'friend',
-    provider: 'ななちゃん',
-    message: 'イェーイ☆'
-}
-];  // ← この閉じ括弧とセミコロンが必要
+        {
+            type: 'friend',
+            provider: 'ななちゃん',
+            message: 'イェーイ☆'
+        },
+        // 014.png の情報
+        {
+        type: 'friend',
+        provider: 'ひよちゃん',
+        message: 'またあそぼうね'
+        },
+        // 015.png の情報
+        {
+            type: 'friend',
+            provider: 'フィンくん',
+            message: 'またあそぼうね'
+        }
+        ];
         
         // 画面切り替え関数
         function showScreen(screenId) {
@@ -897,7 +909,9 @@ function toggleMute() {
     'images/010.png',
     'images/011.png',
     'images/012.png',
-    'images/013.png'  // ← 追加
+    'images/013.png',
+    'images/014.png',
+    'images/015.png'  // ← 追加
 ];
 
             let loadedCount = 0;
